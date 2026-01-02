@@ -110,3 +110,6 @@ pom-version-updater/
 ## 📄 License
 
 MIT License - See LICENSE file
+
+Internal IBM tool - for WIoTP team use only.
+
