@@ -133,65 +133,6 @@ pom-updater/
 └── README.md                 # This file
 ```
 
-## 🔧 Configuration
-
-### Organization and Branch
-
-Edit these values in `functions.sh` if you want different defaults:
-
-```bash
-# Default values (can be overridden at runtime)
-ORG_NAME="wiotp"
-BRANCH_NAME="feature/update-pom-versions"
-```
-
-### PR Template
-
-The PR title and body are defined in the `createPR` function in `functions.sh`. Customize as needed.
-
-## 🐛 Troubleshooting
-
-### "gh: command not found"
-
-Install GitHub CLI:
-```bash
-# macOS
-brew install gh
-
-# Linux
-# See: https://github.com/cli/cli/blob/trunk/docs/install_linux.md
-```
-
-Then authenticate:
-```bash
-gh auth login
-```
-
-### "Python 3 not found"
-
-Install Python 3:
-```bash
-# macOS
-brew install python3
-
-# Linux
-sudo apt-get install python3
-```
-
-### "Failed to clone repository"
-
-Make sure:
-- You have SSH keys configured for github.ibm.com
-- You have access to the repository
-- Repository name is correct in repos.txt
-
-### "Failed to create pull request"
-
-Make sure:
-- GitHub CLI is authenticated: `gh auth status`
-- You have permission to create PRs in the repository
-- The base branch exists
-
 ## 📝 Tips
 
 1. **Start Small**: Test with 2-3 repos first
