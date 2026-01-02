@@ -1,0 +1,9 @@
+# List your repository names here (one per line)
+# Lines starting with # are ignored
+# 
+# Example:
+# wiotp-repo-1
+# wiotp-repo-2
+# wiotp-repo-3
+#
+# Add your repository names below:

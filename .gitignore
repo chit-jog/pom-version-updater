@@ -1,0 +1,23 @@
+# Temporary files
+temp_repos/
+*.tmp
+
+# Version mappings (user-specific)
+version-mappings.txt
+
+# Logs
+output/
+*.log
+
+# macOS
+.DS_Store
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Backup files
+*.bak
