@@ -1,7 +1,8 @@
 #!/bin/bash
 
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$DIR/lib/functions.sh"
+# Get the script's directory (not the lib directory)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/functions.sh"
 
 # =====================================================================================================================
 # Main execution
@@ -23,7 +24,7 @@ echo ""
 getParameters
 
 # Check if repos.txt exists
-REPOS_FILE="$DIR/repos.txt"
+REPOS_FILE="$SCRIPT_DIR/repos.txt"
 if [ ! -f "$REPOS_FILE" ]; then
     echo -e "${RED}repos.txt file not found!${RESET}"
     echo -e "${YELLOW}Creating a sample repos.txt file...${RESET}"
@@ -41,14 +42,17 @@ fi
 
 # Read repositories
 echo -e "${BLUE}Reading repositories from repos.txt...${RESET}"
+echo "DEBUG: REPOS_FILE=$REPOS_FILE"
 repos=()
 while IFS= read -r line; do
     # Skip empty lines and comments
     if [[ ! -z "$line" ]] && [[ ! "$line" =~ ^# ]]; then
+        echo "DEBUG: Adding repo: [$line]"
         repos+=("$line")
     fi
 done < "$REPOS_FILE"
 
+echo "DEBUG: Total repos found: ${#repos[@]}"
 if [ ${#repos[@]} -eq 0 ]; then
     echo -e "${RED}No repositories found in repos.txt${RESET}"
     exit 1

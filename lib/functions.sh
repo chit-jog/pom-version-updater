@@ -71,36 +71,12 @@ function getParameters() {
     
     read -p "Enter Jira Issue (e.g., WIOTP-1234): " JIRA_ISSUE
     
-    # Ask about version mappings file
-    echo -e ""
-    echo -e "${BLUE}Do you want to use a saved version mappings file?${RESET}"
-    echo -e "  (This allows you to reuse the same versions across multiple repos)"
-    read -p "Use saved mappings? (y/n) [n]: " USE_MAPPINGS
-    USE_MAPPINGS=${USE_MAPPINGS:-n}
-    
-    if [ "$USE_MAPPINGS" == "y" ] || [ "$USE_MAPPINGS" == "Y" ]; then
-        read -p "Enter mappings file path [version-mappings.txt]: " MAPPINGS_FILE
-        MAPPINGS_FILE=${MAPPINGS_FILE:-version-mappings.txt}
-        
-        if [ ! -f "$MAPPINGS_FILE" ]; then
-            echo -e "${YELLOW}Warning: File $MAPPINGS_FILE not found. Will prompt for versions.${RESET}"
-            USE_MAPPINGS="n"
-        else
-            echo -e "${GREEN}✓ Will use mappings from: $MAPPINGS_FILE${RESET}"
-        fi
-    else
-        MAPPINGS_FILE=""
-    fi
-    
     echo -e ""
     echo -e "---------------------------------------------------------------"
     echo "Organization: $ORG_NAME"
     echo "Folder: $FOLDER_NAME"
     echo "Branch: $BRANCH_NAME"
     echo "Jira Issue: $JIRA_ISSUE"
-    if [ "$USE_MAPPINGS" == "y" ]; then
-        echo "Version Mappings: $MAPPINGS_FILE"
-    fi
     echo -e "---------------------------------------------------------------"
     echo -e ""
     
@@ -110,64 +86,6 @@ function getParameters() {
     export FOLDER_NAME
     export BRANCH_NAME
     export JIRA_ISSUE
-    export USE_MAPPINGS
-    export MAPPINGS_FILE
-}
-
-# =====================================================================================================================
-# Load version mappings from file
-# =====================================================================================================================
-function loadVersionMappings() {
-    local mappings_file="$1"
-    local temp_file=$(mktemp)
-    
-    if [ ! -f "$mappings_file" ]; then
-        return 1
-    fi
-    
-    # Read mappings file and convert to temp format
-    while IFS='=' read -r dependency version; do
-        # Skip comments and empty lines
-        if [[ "$dependency" =~ ^#.*$ ]] || [ -z "$dependency" ]; then
-            continue
-        fi
-        echo "${dependency}=${version}" >> "$temp_file"
-    done < "$mappings_file"
-    
-    echo "$temp_file"
-}
-
-# =====================================================================================================================
-# Save version mappings to file
-# =====================================================================================================================
-function saveVersionMappings() {
-    local temp_mappings="$1"
-    local output_file="version-mappings.txt"
-    
-    if [ ! -f "$temp_mappings" ] || [ ! -s "$temp_mappings" ]; then
-        return
-    fi
-    
-    echo -e "${BLUE}Saving version mappings for reuse...${RESET}"
-    
-    # Create header
-    cat > "$output_file" << EOF
-# Version Mappings File
-# Generated: $(date)
-# Format: groupId:artifactId:versionRange=fixedVersion
-#
-# You can reuse this file for other repositories with the same dependencies
-# Edit this file to change versions, then use it with --use-mappings option
-#
-EOF
-    
-    # Append mappings
-    while IFS='=' read -r key value; do
-        echo "${key}=${value}" >> "$output_file"
-    done < "$temp_mappings"
-    
-    echo -e "${GREEN}✓ Saved version mappings to: $output_file${RESET}"
-    echo -e "${YELLOW}  You can reuse this file for other repos!${RESET}"
 }
 
 # =====================================================================================================================
@@ -322,13 +240,6 @@ function processRepository() {
     # Store mappings in a temporary file (bash 3 compatible)
     temp_mappings=$(mktemp)
     
-    # Load saved mappings if available
-    saved_mappings=""
-    if [ "$USE_MAPPINGS" == "y" ] && [ -f "$MAPPINGS_FILE" ]; then
-        saved_mappings=$(loadVersionMappings "$MAPPINGS_FILE")
-        echo -e "${GREEN}✓ Loaded saved version mappings${RESET}\n"
-    fi
-    
     # Convert ranges to array to avoid read issues
     IFS=$'\n' read -d '' -r -a ranges_array <<< "$ranges"
     
@@ -347,34 +258,9 @@ function processRepository() {
             continue
         fi
         
-        # Check if we have a saved mapping for this dependency
-        mapping_key="${group_id}:${artifact_id}:${version_range}"
-        saved_version=""
-        
-        if [ -n "$saved_mappings" ] && [ -f "$saved_mappings" ]; then
-            saved_version=$(grep "^${mapping_key}=" "$saved_mappings" 2>/dev/null | cut -d'=' -f2)
-        fi
-        
         echo -e "${BLUE}[$count] ${group_id}:${artifact_id}${RESET}"
         echo -e "Current range: ${version_range}"
-        
-        if [ -n "$saved_version" ]; then
-            echo -e "${GREEN}Found saved version: ${saved_version}${RESET}"
-            read -p "Use this version? (y/n/skip) [y]: " use_saved
-            use_saved=${use_saved:-y}
-            
-            if [ "$use_saved" == "y" ] || [ "$use_saved" == "Y" ]; then
-                new_version="$saved_version"
-            elif [ "$use_saved" == "skip" ]; then
-                echo -e "${YELLOW}⚠ Skipping${RESET}\n"
-                ((count++))
-                continue
-            else
-                read -p "Enter different version: " new_version
-            fi
-        else
-            read -p "Enter fixed version (or 'skip'): " new_version
-        fi
+        read -p "Enter fixed version (or 'skip'): " new_version
         
         if [ "$new_version" != "skip" ] && [ ! -z "$new_version" ]; then
             echo "${group_id}:${artifact_id}:${version_range}:${pom_file}=${new_version}" >> "$temp_mappings"
@@ -384,11 +270,6 @@ function processRepository() {
         fi
         ((count++))
     done
-    
-    # Cleanup saved mappings temp file
-    if [ -n "$saved_mappings" ] && [ -f "$saved_mappings" ]; then
-        rm -f "$saved_mappings"
-    fi
     
     # Check if any versions were specified
     if [ ! -s "$temp_mappings" ]; then
@@ -407,11 +288,6 @@ function processRepository() {
         IFS=: read -r group_id artifact_id version_range pom_file <<< "$key"
         updatePomVersion "$pom_file" "$group_id" "$artifact_id" "$version_range" "$new_version"
     done < "$temp_mappings"
-    
-    # Save version mappings for reuse (only on first successful repo)
-    if [ ! -f "version-mappings.txt" ]; then
-        saveVersionMappings "$temp_mappings"
-    fi
     
     # Cleanup temp file
     rm -f "$temp_mappings"

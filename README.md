@@ -1,217 +1,112 @@
-# POM Version Updater
+# 🔧 POM Version Updater
 
-Bash script to automate updating Maven dependency version ranges to fixed versions across multiple WIoTP repositories.
+Automates updating Maven POM dependency version ranges to fixed versions across multiple repositories.
+
+## ✨ What It Does
+
+- 🔍 Scans `pom.xml` files for version ranges (e.g., `[4.0.0, 5.0.0)`)
+- ✏️ Prompts you to specify fixed versions
+- 📝 Updates all `pom.xml` files
+- 🌿 Creates a feature branch
+- 💾 Commits and pushes changes
+- 🔀 Creates a Pull Request
 
 ## 📋 Prerequisites
 
-Before running the script, make sure you have:
-
-- **Python 3** - For XML parsing
-- **Git** - Configured with your credentials
-- **GitHub CLI (gh)** - For creating pull requests
-  - Install: `brew install gh` (macOS) or see https://cli.github.com/
-  - Authenticate: `gh auth login`
-
-## 🚀 Quick Start
-
-### 1. Setup
-
 ```bash
-cd pom-updater
-chmod +x update-pom-versions.sh
+# Install GitHub CLI
+brew install gh
+
+# Authenticate
+gh auth login
 ```
 
-### 2. Add Repository Names
+## 🚀 Setup
 
-Edit `repos.txt` and add your repository names (one per line):
+1. **Clone this repository**
+   ```bash
+   git clone <your-repo-url>
+   cd pom-version-updater
+   ```
 
-```
-wiotp-repo-1
-wiotp-repo-2
-wiotp-repo-3
-```
+2. **Add repository names to `repos.txt`**
+   ```
+   repo-name-1
+   repo-name-2
+   repo-name-3
+   
+   ```
+   ⚠️ **Important:** Add a blank line at the end after your last repository name
 
-### 3. Run the Script
+3. **Make script executable**
+   ```bash
+   chmod +x update-pom-versions.sh
+   ```
+
+## 💻 Usage
 
 ```bash
 ./update-pom-versions.sh
 ```
 
-## 📖 How It Works
+### You'll be prompted for:
 
-The script will:
+1. **Organization name** (default: `wiotp`)
+2. **Folder name** for cloned repos (default: `temp_repos`)
+3. **Branch name** (default: `feature/update-pom-versions`)
+4. **Jira Issue** (e.g., `WIOTP-1234`)
 
-1. **Prompt for Configuration**
-   - Organization name (default: wiotp)
-   - Folder for cloned repos (default: temp_repos)
-   - Branch name (default: feature/update-pom-versions)
-   - Jira issue number
+### For each repository:
 
-2. **For Each Repository:**
-   - Clone the repository
-   - Scan all `pom.xml` files for version ranges
-   - Display found ranges in a table
-   - Ask you to specify fixed version for each dependency
-   - Update the `pom.xml` files
-   - Create a feature branch
-   - Commit and push changes
-   - Create a Pull Request
+1. Script shows all version ranges found
+2. You enter fixed version for each dependency
+3. Script updates files, commits, and creates PR
 
-3. **Show Summary**
-   - Total repositories processed
-   - Success/failure count
-
-## 💡 Example Session
+## 📖 Example
 
 ```bash
 $ ./update-pom-versions.sh
 
-===============================================================================
-                    POM Version Updater - WIoTP Team
-===============================================================================
-
 Enter organization name [wiotp]: wiotp
-Enter folder name to store cloned repos [temp_repos]: temp_repos
-Enter branch name [feature/update-pom-versions]: feature/update-pom-versions
-Enter Jira Issue (e.g., WIOTP-1234): WIOTP-5678
-
-Found 3 repository/repositories to process
-
-Do you want to proceed? (y/n): y
-
-===============================================================================
-[1/3] Processing: wiotp-example-repo
-===============================================================================
-
---Cloning wiotp-example-repo...--
-
-Scanning for version ranges...
+Enter folder name [temp_repos]: temp_repos
+Enter branch name [feature/update-pom-versions]: fix/pom-versions
+Enter Jira Issue: WIOTP-1234
 
 Found version ranges:
-================================================================
-1. com.ibm.wiotp.util:com.ibm.wiotp.util.httpservice
-   Current: [4.0.0, 5.0.0)
-   File: /path/to/pom.xml
-
-2. com.ibm.wiotp.core:wiotp-core-api
-   Current: [3.1.0, 4.0.0)
-   File: /path/to/pom.xml
-================================================================
-
-[1] com.ibm.wiotp.util:com.ibm.wiotp.util.httpservice
-Current range: [4.0.0, 5.0.0)
-Enter fixed version (or 'skip'): 4.2.1
-✓ Will update to: 4.2.1
-
-[2] com.ibm.wiotp.core:wiotp-core-api
-Current range: [3.1.0, 4.0.0)
-Enter fixed version (or 'skip'): 3.5.2
-✓ Will update to: 3.5.2
-
-Creating branch: feature/update-pom-versions
-Committing changes...
-Pushing branch to remote...
-Creating pull request...
-✓ Pull request created successfully
-
-===============================================================================
-                              SUMMARY
-===============================================================================
-Total repositories: 3
-✓ Successful: 3
-✗ Failed: 0
-===============================================================================
+1. com.ibm.wiotp.util:com.ibm.wiotp.util
+   Current: [3.0.0, 4.0.0)
+   
+Enter fixed version (or 'skip'): 3.0.28
+✓ Will update to: 3.0.28
 ```
 
-## 📁 Project Structure
+## 📁 File Structure
 
 ```
-pom-updater/
-├── update-pom-versions.sh   # Main script (run this)
-├── functions.sh              # Reusable functions
-├── repos.txt                 # List of repositories
-└── README.md                 # This file
+pom-version-updater/
+├── update-pom-versions.sh    # Main script
+├── lib/
+│   └── functions.sh           # Helper functions
+├── repos.txt                  # List of repositories
+├── .gitignore                 # Excludes temp files
+└── README.md                  # This file
 ```
 
-## 🔧 Configuration
+## 📝 Notes
 
-### Organization and Branch
+- Temporary cloned repositories are stored in the folder you specify
+- You can skip any dependency by entering `skip`
+- Pull requests are created automatically via GitHub CLI
+- The script handles multiple `pom.xml` files in subdirectories
 
-Edit these values in `functions.sh` if you want different defaults:
+## ⚠️ Troubleshooting
 
-```bash
-# Default values (can be overridden at runtime)
-ORG_NAME="wiotp"
-BRANCH_NAME="feature/update-pom-versions"
-```
 
-### PR Template
-
-The PR title and body are defined in the `createPR` function in `functions.sh`. Customize as needed.
-
-## 🐛 Troubleshooting
-
-### "gh: command not found"
-
-Install GitHub CLI:
-```bash
-# macOS
-brew install gh
-
-# Linux
-# See: https://github.com/cli/cli/blob/trunk/docs/install_linux.md
-```
-
-Then authenticate:
-```bash
-gh auth login
-```
-
-### "Python 3 not found"
-
-Install Python 3:
-```bash
-# macOS
-brew install python3
-
-# Linux
-sudo apt-get install python3
-```
-
-### "Failed to clone repository"
-
-Make sure:
-- You have SSH keys configured for github.ibm.com
-- You have access to the repository
-- Repository name is correct in repos.txt
-
-### "Failed to create pull request"
-
-Make sure:
-- GitHub CLI is authenticated: `gh auth status`
-- You have permission to create PRs in the repository
-- The base branch exists
-
-## 📝 Tips
-
-1. **Start Small**: Test with 2-3 repos first
-2. **Use Skip**: Type 'skip' for dependencies you don't want to update
-3. **Cleanup**: The script asks if you want to cleanup cloned repos at the end
-4. **Batch Processing**: Process repos in batches (10-20 at a time)
-
-## 🔒 Security
-
-- Never commit GitHub tokens to the repository
-- Use SSH keys for Git authentication
-- Review all PRs before merging
-
-## 📞 Support
-
-For issues:
-1. Check the error messages in the terminal
-2. Verify prerequisites are installed
-3. Check GitHub CLI authentication: `gh auth status`
+**"No repositories found in repos.txt"**
+- Make sure `repos.txt` exists and contains repository names
+- Ensure repository names are not commented out (no `#` at start)
+- **Add a blank line at the end of the file after your last repository**
 
 ## 📄 License
 
-Internal IBM tool - for WIoTP team use only.
+MIT License - See LICENSE file
