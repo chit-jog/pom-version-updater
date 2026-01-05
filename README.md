@@ -107,9 +107,3 @@ pom-version-updater/
 - Ensure repository names are not commented out (no `#` at start)
 - **Add a blank line at the end of the file after your last repository**
 
-## 📄 License
-
-MIT License - See LICENSE file
-
-Internal IBM tool - for WIoTP team use only.
-
